@@ -5,9 +5,27 @@ import pandas as pd
 
 from model import StockBuddyForecaster
 
+# Minimum training rows for the lag/MA features to be fully defined
+MIN_TRAIN_ROWS = 30
+
 
 def backtest(close: pd.Series, train_window: int = 252, step: int = 21) -> dict:
-    """Walk-forward rolling-window evaluation."""
+    """Walk-forward rolling-window evaluation.
+
+    `train_window` is capped at len(close)-2 so short histories (e.g. the
+    ~100 rows from Alpha Vantage's free "compact" output) still yield
+    evaluable windows; if no windows are possible, returns zeros.
+    """
+    if len(close) < MIN_TRAIN_ROWS + 2:
+        return {
+            "windows_evaluated": 0,
+            "mae_model": 0.0, "mae_naive_baseline": 0.0,
+            "mae_improvement_pct": 0.0,
+            "directional_accuracy_model": 0.0,
+            "directional_accuracy_naive": 0.0,
+        }
+
+    train_window = min(train_window, len(close) - 2)
     mae_model, mae_naive, dir_model, dir_naive = [], [], [], []
 
     for i in range(train_window, len(close) - 1, step):
