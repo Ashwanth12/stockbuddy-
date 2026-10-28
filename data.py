@@ -6,12 +6,17 @@ BASE_URL = "https://www.alphavantage.co/query"
 
 
 def fetch_daily_history(symbol: str, api_key: str = "demo") -> pd.DataFrame:
-    """Retrieve full daily OHLCV history. Raises ValueError with Alpha
-    Vantage's own message on rate limits, invalid keys, or bad symbols."""
+    """Retrieve recent daily OHLCV history (last ~100 trading days).
+
+    Note: outputsize="full" (20+ years) is a premium Alpha Vantage feature,
+    so the free tier uses "compact". ~100 rows covers the lag/MA features
+    and a short rolling-window backtest. Raises ValueError with Alpha
+    Vantage's own message on rate limits, invalid keys, or bad symbols.
+    """
     params = {
         "function": "TIME_SERIES_DAILY",
         "symbol": symbol.upper(),
-        "outputsize": "full",
+        "outputsize": "compact",
         "datatype": "json",
         "apikey": api_key,
     }
